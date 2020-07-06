@@ -2,9 +2,13 @@ package timetable
 
 import java.time.LocalTime
 
+import delays.DelayManager
+
 import scala.io.Source
 
-class InMemoryTimetableManager(lines: Seq[Line], stops: Seq[Stop], times: Seq[Time]) extends TimetableManager {
+class InMemoryTimetableManager(delayManager: DelayManager, lines: Seq[Line], stops: Seq[Stop], times: Seq[Time])
+  extends TimetableManager {
+
   def getNextLine(stopId: Int, time: LocalTime): Option[String] = {
     times
       .find(t => t.stopId == stopId && t.time.isAfter(time))
@@ -59,8 +63,8 @@ object InMemoryTimetableManager {
     stops
   }
 
-  def getStaticCsvTimetableManager: InMemoryTimetableManager = {
-    new InMemoryTimetableManager(readLines(), readStops(), readTimes())
+  def getStaticCsvTimetableManager(delayManager: DelayManager): InMemoryTimetableManager = {
+    new InMemoryTimetableManager(delayManager, readLines(), readStops(), readTimes())
   }
 }
 

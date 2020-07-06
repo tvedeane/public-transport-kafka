@@ -6,8 +6,9 @@ import timetable.InMemoryTimetableManager
 class ScalatraBootstrap extends LifeCycle {
 
   override def init(context: ServletContext): Unit = {
-    val delayStorage = new InMemoryDelayManager
-    DelayObserver.startObserving(delayStorage)
-    context.mount(new Servlets(delayStorage, InMemoryTimetableManager.getStaticCsvTimetableManager), "/*")
+    val delayManager = new InMemoryDelayManager
+    DelayObserver.startObserving(delayManager)
+    context.mount(
+      new Servlets(delayManager, InMemoryTimetableManager.getStaticCsvTimetableManager(delayManager)), "/*")
   }
 }
