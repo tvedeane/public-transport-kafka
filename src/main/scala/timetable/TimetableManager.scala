@@ -1,6 +1,7 @@
 package timetable
 
 import java.time.LocalTime
+import java.time.temporal.ChronoUnit
 
 import delays.DelayManager
 
@@ -11,18 +12,24 @@ class InMemoryTimetableManager(delayManager: DelayManager, lines: Seq[Line], sto
 
   def getNextLine(stopId: Int, time: LocalTime): Option[String] = {
     times
-      .find(t => t.stopId == stopId && t.time.isAfter(time))
-      .map(_.lineId)
-      .flatMap(getLineName)
+      .filter(t => t.stopId == stopId)
+      .map(t => {
+        val lineName = getLineName(t.lineId).get
+        val currentDelay = delayManager.getDelay(lineName)
+        // TODO handle delay making the vehicle coming next day
+        (lineName, t.time.plus(currentDelay, ChronoUnit.MINUTES))
+      })
+      .minByOption(t => t._2)
+      .map(t => t._1)
   }
 
   def getLineAt(x: Int, y: Int, time: LocalTime): Option[String] = {
     getStopId(x, y)
-      .flatMap(stopId => getLineId(time, stopId))
+      .flatMap(stopId => getLineIdAtStop(time, stopId))
       .flatMap(getLineName)
   }
 
-  private def getLineId(time: LocalTime, stopId: Int): Option[Int] = {
+  private def getLineIdAtStop(time: LocalTime, stopId: Int): Option[Int] = {
     times.find(t => t.stopId == stopId && t.time == time).map(_.lineId)
   }
 
